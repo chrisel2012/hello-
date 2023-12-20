@@ -1,72 +1,44 @@
 import streamlit as st
-import pandas as pd
-from transformers import pipeline
+import random
+import time
 
-# Mock data for game reviews
-game_reviews_data = {
-    'User_ID': [1, 2, 1, 3, 2, 3, 4, 5, 4],
-    'Game_ID': [1, 1, 2, 2, 3, 3, 4, 4, 5],
-    'Rating': [5, 4, 3, 4, 5, 2, 4, 3, 5],
-}
+st.title("Simple chat")
 
-# Mock data for video game catalog
-game_catalog_data = {
-    'Game_ID': [1, 2, 3, 4, 5],
-    'Game Title': ['Game A', 'Game B', 'Game C', 'Game D', 'Game E'],
-    'Platform': ['PS4', 'Nintendo Switch', 'Xbox One', 'PC', 'PS4'],
-    'Genre': ['Action', 'Adventure', 'RPG', 'Simulation', 'Action'],
-}
+# Initialize chat history
+if "messages" not in st.session_state:
+    st.session_state.messages = []
 
-# Function to get game details based on user input
-def get_game_details(game_id):
-    game_info = game_catalog_data[game_catalog_data['Game_ID'] == game_id].iloc[0]
-    return f"**Platform:** {game_info['Platform']}\n**Genre:** {game_info['Genre']}"
+# Display chat messages from history on app rerun
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        st.markdown(message["content"])
 
-# Create a Pandas DataFrame for game reviews
-reviews_df = pd.DataFrame(game_reviews_data)
+# Accept user input
+if prompt := st.chat_input("What is up?"):
+    # Add user message to chat history
+    st.session_state.messages.append({"role": "user", "content": prompt})
+    # Display user message in chat message container
+    with st.chat_message("user"):
+        st.markdown(prompt)
 
-# Sentiment analysis pipeline
-sentiment_analyzer = pipeline("sentiment-analysis")
-
-# Streamlit app
-st.title("Game Recommendation System")
-
-# User input for feedback
-user_feedback = st.text_input("Provide your feedback on the game:")
-
-# Perform sentiment analysis on user feedback
-if user_feedback:
-    sentiment_result = sentiment_analyzer(user_feedback)[0]
-    st.write(f"Sentiment Analysis: {sentiment_result['label']} ({sentiment_result['score']:.2f})")
-
-# User input for game title
-selected_game_id = st.selectbox("Select a game:", game_catalog_data['Game_ID'])
-selected_game_title = game_catalog_data[game_catalog_data['Game_ID'] == selected_game_id]['Game Title'].iloc[0]
-
-# Display game details
-st.subheader("Game Details:")
-game_details = get_game_details(selected_game_id)
-st.markdown(game_details)
-
-# Placeholder logic for recommending games similar to the selected one
-# You can replace this logic with a more sophisticated content-based recommendation approach
-similar_games = [game_id for game_id in game_catalog_data['Game_ID'] if game_id != selected_game_id]
-recommended_games = game_catalog_data[game_catalog_data['Game_ID'].isin(similar_games)]['Game Title'].tolist()
-
-# Display recommendations
-st.subheader("Recommendations:")
-st.write("Games you might also like:")
-st.write(recommended_games)
-
-# Display game reviews
-st.subheader("Game Reviews:")
-st.dataframe(reviews_df)
-
-# Placeholder links for external sources
-st.subheader("External Links:")
-metacritic_link = f"[Metacritic - {selected_game_title}](https://www.metacritic.com/search/game/{selected_game_title})"
-st.markdown(metacritic_link)
-
-youtube_link = f"[YouTube - {selected_game_title}](https://www.youtube.com/results?search_query={selected_game_title}+gameplay)"
-st.markdown(youtube_link)
+    # Display assistant response in chat message container
+    with st.chat_message("assistant"):
+        message_placeholder = st.empty()
+        full_response = ""
+        assistant_response = random.choice(
+            [
+                "Hello there! How can I assist you today?",
+                "Hi, human! Is there anything I can help you with?",
+                "Do you need help?",
+            ]
+        )
+        # Simulate stream of response with milliseconds delay
+        for chunk in assistant_response.split():
+            full_response += chunk + " "
+            time.sleep(0.05)
+            # Add a blinking cursor to simulate typing
+            message_placeholder.markdown(full_response + "▌")
+        message_placeholder.markdown(full_response)
+    # Add assistant response to chat history
+    st.session_state.messages.append({"role": "assistant", "content": full_response})
 

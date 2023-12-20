@@ -1,7 +1,5 @@
 import streamlit as st
 import pandas as pd
-from surprise import Dataset, Reader, SVD
-from surprise.model_selection import train_test_split
 from transformers import pipeline
 
 # Mock data for game reviews
@@ -27,15 +25,6 @@ def get_game_details(game_id):
 # Create a Pandas DataFrame for game reviews
 reviews_df = pd.DataFrame(game_reviews_data)
 
-# Load the data into the Surprise dataset
-reader = Reader(rating_scale=(1, 5))
-data = Dataset.load_from_df(reviews_df[['User_ID', 'Game_ID', 'Rating']], reader)
-
-# Build the recommendation model (SVD algorithm)
-trainset, testset = train_test_split(data, test_size=0.2)
-model = SVD()
-model.fit(trainset)
-
 # Sentiment analysis pipeline
 sentiment_analyzer = pipeline("sentiment-analysis")
 
@@ -59,18 +48,15 @@ st.subheader("Game Details:")
 game_details = get_game_details(selected_game_id)
 st.markdown(game_details)
 
-# Display recommendations based on user feedback
-st.subheader("Recommendations:")
-if user_feedback:
-    # Predict the rating for the selected game based on user feedback
-    predicted_rating = model.predict(1, selected_game_id).est
-    st.write(f"Predicted Rating for {selected_game_title}: {predicted_rating:.2f}")
+# Placeholder logic for recommending games similar to the selected one
+# You can replace this logic with a more sophisticated content-based recommendation approach
+similar_games = [game_id for game_id in game_catalog_data['Game_ID'] if game_id != selected_game_id]
+recommended_games = game_catalog_data[game_catalog_data['Game_ID'].isin(similar_games)]['Game Title'].tolist()
 
-    # Placeholder logic for recommending games similar to the selected one
-    similar_games = model.get_neighbors(selected_game_id, k=3)
-    recommended_games = game_catalog_data[game_catalog_data['Game_ID'].isin(similar_games)]['Game Title'].tolist()
-    st.write("Games you might also like:")
-    st.write(recommended_games)
+# Display recommendations
+st.subheader("Recommendations:")
+st.write("Games you might also like:")
+st.write(recommended_games)
 
 # Display game reviews
 st.subheader("Game Reviews:")
@@ -83,3 +69,4 @@ st.markdown(metacritic_link)
 
 youtube_link = f"[YouTube - {selected_game_title}](https://www.youtube.com/results?search_query={selected_game_title}+gameplay)"
 st.markdown(youtube_link)
+
